@@ -32,6 +32,10 @@ spec:
             name: {{ .Values.application.secretName }}
         {{- end }}
         env:
+        {{- range $name, $value := .Values.environmentVars }}
+        - name: {{ $name }}
+          value: {{ $value }}
+        {{- end }}
         - name: DATABASE_URL
           value: {{ .Values.application.database_url | quote }}
         ports:
@@ -39,16 +43,18 @@ spec:
           containerPort: {{ .Values.service.internalPort }}
         livenessProbe:
           httpGet:
-            path: /
+            path: /monitor/health/run
             port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 15
+          initialDelaySeconds: 45
           timeoutSeconds: 15
+          periodSeconds: 60
         readinessProbe:
           httpGet:
-            path: /
+            path: /monitor/health/run
             port: {{ .Values.service.internalPort }}
-          initialDelaySeconds: 5
-          timeoutSeconds: 3
+          initialDelaySeconds: 60
+          timeoutSeconds: 15
+          periodSeconds: 60
         resources:
 {{ toYaml .Values.resources | indent 12 }}
 {{- end -}}
